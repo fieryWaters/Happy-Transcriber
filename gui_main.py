@@ -1,7 +1,7 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, simpledialog, ttk
 import os
-from transcribe_module import transcribe_folder
+from transcribe_module import transcribe_file
 
 # File to store the API key
 api_key_file = 'api_key.txt'
@@ -19,10 +19,10 @@ def transcribe_audio():
         return
     
     if not os.path.exists(api_key_file):
-        api_key = api_key_entry.get()
+        api_key = simpledialog.askstring("API Key", "Please enter your OpenAI API key:")
         
         if not api_key:
-            messagebox.showwarning("Warning", "Please enter your OpenAI API key.")
+            messagebox.showwarning("Warning", "API key not provided.")
             return
         
         with open(api_key_file, 'w') as file:
@@ -31,8 +31,35 @@ def transcribe_audio():
         with open(api_key_file, 'r') as file:
             api_key = file.read().strip()
     
-    transcribe_folder(folder_path, api_key)
+    # Disable the Transcribe button during processing
+    transcribe_button.config(state=tk.DISABLED)
+    
+    # Update progress bar and status text
+    progress_bar["value"] = 0
+    status_text.set("Transcribing audio files...")
+    window.update()
+    
+    total_files = sum(filename.endswith(('.wav', '.mp3', '.flac', '.aac', '.ogg', '.m4a')) for filename in os.listdir(folder_path))
+    current_file = 0
+    
+    for filename in os.listdir(folder_path):
+        if filename.endswith(('.wav', '.mp3', '.flac', '.aac', '.ogg', '.m4a')):
+            current_file += 1
+            progress_bar["value"] = (current_file / total_files) * 100
+            status_text.set(f"Transcribing file {current_file} of {total_files}: {filename}")
+            window.update()
+            
+            audio_path = os.path.join(folder_path, filename)
+            transcribe_file(audio_path, api_key)
+    
+    # Enable the Transcribe button after processing
+    transcribe_button.config(state=tk.NORMAL)
+    
     messagebox.showinfo("Success", "Transcription completed.")
+    
+    # Reset progress bar and status text
+    progress_bar["value"] = 0
+    status_text.set("")
 
 # Create the main window
 window = tk.Tk()
@@ -48,16 +75,18 @@ folder_entry.pack()
 folder_button = tk.Button(window, text="Browse", command=select_folder)
 folder_button.pack()
 
-# API key input
-api_key_label = tk.Label(window, text="OpenAI API Key:")
-api_key_label.pack()
-
-api_key_entry = tk.Entry(window, width=50)
-api_key_entry.pack()
-
 # Transcribe button
 transcribe_button = tk.Button(window, text="Transcribe", command=transcribe_audio)
 transcribe_button.pack()
+
+# Progress bar
+progress_bar = ttk.Progressbar(window, length=300, mode='determinate')
+progress_bar.pack()
+
+# Status text
+status_text = tk.StringVar()
+status_label = tk.Label(window, textvariable=status_text)
+status_label.pack()
 
 # Run the GUI
 window.mainloop()
