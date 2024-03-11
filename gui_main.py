@@ -1,15 +1,27 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 import os
+import subprocess
 from transcribe_module import transcribe_file
 
 # File to store the API key
 api_key_file = 'api_key.txt'
 
 def select_folder():
-    folder_path = filedialog.askdirectory()
+    current_directory = os.path.dirname(os.path.abspath(__file__))
+    folder_path = filedialog.askdirectory(initialdir=current_directory)
     folder_entry.delete(0, tk.END)
     folder_entry.insert(tk.END, folder_path)
+
+def open_file_location(folder_path):
+    transcriptions_directory = os.path.join(folder_path, 'Transcriptions')
+    if os.path.exists(transcriptions_directory):
+        if os.name == 'nt':  # For Windows
+            os.startfile(transcriptions_directory)
+        else:  # For macOS and Linux
+            subprocess.Popen(['open', transcriptions_directory])
+    else:
+        messagebox.showinfo("Info", "No transcriptions found.")
 
 def transcribe_audio():
     folder_path = folder_entry.get()
@@ -55,11 +67,13 @@ def transcribe_audio():
     # Enable the Transcribe button after processing
     transcribe_button.config(state=tk.NORMAL)
     
-    messagebox.showinfo("Success", "Transcription completed.")
-    
     # Reset progress bar and status text
     progress_bar["value"] = 0
     status_text.set("")
+    
+    # Show completion message with the option to open the file location
+    if messagebox.askyesno("Transcription Complete", "Transcription completed. Do you want to open the file location?"):
+        open_file_location(folder_path)
 
 # Create the main window
 window = tk.Tk()
