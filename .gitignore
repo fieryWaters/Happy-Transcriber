@@ -1,9 +1,8 @@
 .DS_Store
-Folder to Transcribe/
-Transcriptions
 __pycache__/
 api_key.txt
 
 
 ffmpegInstall/
 myenv/
+test.py
