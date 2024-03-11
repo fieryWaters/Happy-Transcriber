@@ -1,21 +1,12 @@
+# install_ffmpeg.py
 import os
 import platform
-import subprocess
-import urllib.request
+import shutil
 import zipfile
 import tarfile
 import tempfile
-import shutil
-import ctypes
-import sys
-
-def download_file(url, filename):
-    try:
-        urllib.request.urlretrieve(url, filename)
-        return True
-    except urllib.error.URLError:
-        return False
-
+from utils import run_command, download_file, run_as_admin, subprocess
+from install_7z import install_7zip
 def extract_archive(filename, destination):
     if filename.endswith(".zip"):
         with zipfile.ZipFile(filename, 'r') as zipf:
@@ -28,20 +19,21 @@ def extract_archive(filename, destination):
             tarf.extractall(destination)
     elif filename.endswith(".7z"):
         # Use 7-Zip command line tool to extract the .7z archive
+        seven_zip_path = r"C:\Program Files\7-Zip\7z.exe"
         try:
-            subprocess.run(["7z", "x", f"-o{destination}", filename], check=True)
-        except subprocess.CalledProcessError as e:
+            run_command(f'"{seven_zip_path}" x "{filename}" -o"{destination}" -y')
+        except ValueError as e:
             raise ValueError("Failed to extract .7z archive using 7-Zip: " + str(e))
     else:
         raise ValueError("Unsupported archive format")
 
 def add_to_path(directory):
     if platform.system() == "Windows":
-        subprocess.run(f'setx /m PATH "{directory};%PATH%"', shell=True)
+        run_command(f'setx /m PATH "{directory};%PATH%"')
     else:
         with open(os.path.expanduser("~/.bashrc"), "a") as bashrc:
             bashrc.write(f'\nexport PATH="{directory}:$PATH"\n')
-        subprocess.run(["source", "~/.bashrc"], shell=True)
+        run_command(["source", "~/.bashrc"])
 
 def install_ffmpeg(download_url):
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -78,25 +70,13 @@ def install_ffmpeg(download_url):
         print("FFmpeg installation completed successfully!")
         input("press enter")
 
-
-def is_admin():
-    try:
-        return ctypes.windll.shell32.IsUserAnAdmin()
-    except:
-        return False
-
-def run_as_admin():
-    if not is_admin():
-        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
-        sys.exit(0)
-
-
 if __name__ == "__main__":
     run_as_admin()
 
     # Default download link
     default_url = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z"
 
+    install_7zip()
     # Install FFmpeg
     install_ffmpeg(default_url)
 
