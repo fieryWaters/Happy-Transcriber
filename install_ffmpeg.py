@@ -5,9 +5,12 @@ import shutil
 import zipfile
 import tarfile
 import tempfile
+import subprocess
 from utils import run_command, download_file, run_as_admin, subprocess
 from install_7z import install_7zip
+
 def extract_archive(filename, destination):
+    install_7zip()
     if filename.endswith(".zip"):
         with zipfile.ZipFile(filename, 'r') as zipf:
             zipf.extractall(destination)
@@ -35,11 +38,22 @@ def add_to_path(directory):
             bashrc.write(f'\nexport PATH="{directory}:$PATH"\n')
         run_command(["source", "~/.bashrc"])
 
-def install_ffmpeg(download_url = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z"):
+def is_ffmpeg_installed():
+    try:
+        subprocess.run(["ffmpeg", "-version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        return True
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return False
+
+def install_ffmpeg(download_url="https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z"):
+    if is_ffmpeg_installed():
+        print("FFmpeg is already installed.")
+        return
+    run_as_admin()
+
     with tempfile.TemporaryDirectory() as temp_dir:
         archive_name = os.path.basename(download_url)
         archive_path = os.path.join(temp_dir, archive_name)
-
         print(f"Downloading FFmpeg from: {download_url}")
         if not download_file(download_url, archive_path):
             print("Download failed. Please provide a valid download link.")
@@ -67,17 +81,10 @@ def install_ffmpeg(download_url = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-git
         print("Adding FFmpeg to system path...")
         add_to_path(install_dir)
 
-        print("FFmpeg installation completed successfully!")
-        input("press enter")
+        print("FFmpeg installation completed.")
 
 if __name__ == "__main__":
     run_as_admin()
-
     # Default download link
-    
-
-    install_7zip()
     # Install FFmpeg
     install_ffmpeg()
-
-    input("enter")

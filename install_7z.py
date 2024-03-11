@@ -12,6 +12,8 @@ def install_7zip():
     if is_7zip_installed():
         print("7-Zip is already installed.")
         return True
+    
+    run_as_admin()
 
     # Download 7-Zip installer
     print("Downloading 7-Zip installer...")
@@ -40,5 +42,4 @@ def install_7zip():
     return True
 
 if __name__ == "__main__":
-    run_as_admin()
     install_7zip()

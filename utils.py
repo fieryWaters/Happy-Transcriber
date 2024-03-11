@@ -38,9 +38,12 @@ def save_requirements():
     print("Requirements saved to requirements.txt")
 
 def install_requirements():
-    command = "pip install -r requirements.txt"
+    python_exe = sys.executable
+    command = f'"{python_exe}" -m pip install -r requirements.txt'
     output = run_command(command)
     if output:
         print("Requirements installed successfully")
     else:
         print("Failed to install requirements")
+
+# save_requirements()

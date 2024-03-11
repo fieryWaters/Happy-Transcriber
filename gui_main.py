@@ -1,12 +1,22 @@
+# gui_main.py
+import utils
+utils.install_requirements()
+
+
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 import os
 import subprocess
 import openai
 from transcribe_module import transcribe_file
-from install_ffmpeg import install_ffmpeg
+from install_ffmpeg import install_ffmpeg, is_ffmpeg_installed
 
-install_ffmpeg()
+# Check if FFmpeg is installed
+if not is_ffmpeg_installed():
+    install_ffmpeg()
+    messagebox.showinfo("FFmpeg Installation", "FFmpeg has been installed. Please rerun the application.")
+    exit()
+
 # File to store the API key
 api_key_file = 'api_key.txt'
 
