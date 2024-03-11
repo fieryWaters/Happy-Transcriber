@@ -2,32 +2,37 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 import os
 import subprocess
+import openai
 from transcribe_module import transcribe_file
 
 # File to store the API key
 api_key_file = 'api_key.txt'
 
-def select_folder():
+def select_files_and_directories():
     current_directory = os.path.dirname(os.path.abspath(__file__))
-    folder_path = filedialog.askdirectory(initialdir=current_directory)
-    folder_entry.delete(0, tk.END)
-    folder_entry.insert(tk.END, folder_path)
+    paths = filedialog.askopenfilenames(initialdir=current_directory, title="Select Files and Directories", filetypes=[("All Files", "*.*")])
+    
+    path_entry.delete(0, tk.END)
+    path_entry.insert(tk.END, ', '.join(paths))
 
-def open_file_location(folder_path):
-    transcriptions_directory = os.path.join(folder_path, 'Transcriptions')
-    if os.path.exists(transcriptions_directory):
+def open_file_location(file_path):
+    directory = os.path.dirname(file_path)
+    if os.path.exists(directory):
         if os.name == 'nt':  # For Windows
-            os.startfile(transcriptions_directory)
+            os.startfile(directory)
         else:  # For macOS and Linux
-            subprocess.Popen(['open', transcriptions_directory])
+            subprocess.Popen(['open', directory])
     else:
-        messagebox.showinfo("Info", "No transcriptions found.")
+        messagebox.showinfo("Info", "Directory not found.")
+
+def is_supported_file(file_path):
+    return file_path.endswith(('.wav', '.mp3', '.flac', '.aac', '.ogg', '.m4a'))
 
 def transcribe_audio():
-    folder_path = folder_entry.get()
+    paths = path_entry.get().split(', ')
     
-    if not folder_path:
-        messagebox.showwarning("Warning", "Please select a folder.")
+    if not paths:
+        messagebox.showwarning("Warning", "Please select files or directories.")
         return
     
     if not os.path.exists(api_key_file):
@@ -51,43 +56,73 @@ def transcribe_audio():
     status_text.set("Transcribing audio files...")
     window.update()
     
-    total_files = sum(filename.endswith(('.wav', '.mp3', '.flac', '.aac', '.ogg', '.m4a')) for filename in os.listdir(folder_path))
+    total_files = sum(1 for path in paths for file_or_dir in (os.listdir(path) if os.path.isdir(path) else [path]) if os.path.isfile(file_or_dir) and is_supported_file(file_or_dir))
     current_file = 0
     
-    for filename in os.listdir(folder_path):
-        if filename.endswith(('.wav', '.mp3', '.flac', '.aac', '.ogg', '.m4a')):
-            current_file += 1
-            progress_bar["value"] = (current_file / total_files) * 100
-            status_text.set(f"Transcribing file {current_file} of {total_files}: {filename}")
-            window.update()
-            
-            audio_path = os.path.join(folder_path, filename)
-            transcribe_file(audio_path, api_key)
-    
-    # Enable the Transcribe button after processing
-    transcribe_button.config(state=tk.NORMAL)
+    try:
+        for path in paths:
+            if os.path.isdir(path):
+                for filename in os.listdir(path):
+                    file_path = os.path.join(path, filename)
+                    if os.path.isfile(file_path) and is_supported_file(file_path):
+                        current_file += 1
+                        progress_bar["value"] = (current_file / total_files) * 100
+                        status_text.set(f"Transcribing file {current_file} of {total_files}: {filename}")
+                        window.update()
+                        
+                        transcribe_file(file_path, api_key)
+            elif os.path.isfile(path) and is_supported_file(path):
+                current_file += 1
+                progress_bar["value"] = (current_file / total_files) * 100
+                status_text.set(f"Transcribing file {current_file} of {total_files}: {os.path.basename(path)}")
+                window.update()
+                
+                transcribe_file(path, api_key)
+    except openai.error.AuthenticationError as e:
+        messagebox.showerror("Authentication Error", str(e))
+        response = messagebox.askyesno("Update API Key", "The provided API key is incorrect. Do you want to enter a new API key?\n\nNote: You may need to fund your OpenAI account to obtain a valid API key.")
+        if response:
+            api_key = simpledialog.askstring("API Key", "Please enter a new OpenAI API key:")
+            if api_key:
+                with open(api_key_file, 'w') as file:
+                    file.write(api_key)
+                messagebox.showinfo("API Key Updated", "The API key has been updated. Please try transcribing again.")
+            else:
+                messagebox.showwarning("Warning", "No API key provided.")
+        # Reset progress bar and status text
+        progress_bar["value"] = 0
+        status_text.set("")
+    except openai.error.APIConnectionError as e:
+        messagebox.showerror("Error", "Internet connection lost. Transcription aborted.")
+        # Reset progress bar and status text
+        progress_bar["value"] = 0
+        status_text.set("")
+    finally:
+        # Enable the Transcribe button after processing
+        transcribe_button.config(state=tk.NORMAL)
     
     # Reset progress bar and status text
     progress_bar["value"] = 0
     status_text.set("")
     
     # Show completion message with the option to open the file location
-    if messagebox.askyesno("Transcription Complete", "Transcription completed. Do you want to open the file location?"):
-        open_file_location(folder_path)
-
+    if current_file == total_files:
+        response = messagebox.askyesno("Transcription Complete", "Transcription completed. Do you want to open the file location?")
+        if response:
+            open_file_location(paths[0])
 # Create the main window
 window = tk.Tk()
 window.title("Audio Transcription")
 
-# Folder selection
-folder_label = tk.Label(window, text="Select Folder:")
-folder_label.pack()
+# File and directory selection
+path_label = tk.Label(window, text="Select Files and Directories:")
+path_label.pack()
 
-folder_entry = tk.Entry(window, width=50)
-folder_entry.pack()
+path_entry = tk.Entry(window, width=50)
+path_entry.pack()
 
-folder_button = tk.Button(window, text="Browse", command=select_folder)
-folder_button.pack()
+select_button = tk.Button(window, text="Select", command=select_files_and_directories)
+select_button.pack()
 
 # Transcribe button
 transcribe_button = tk.Button(window, text="Transcribe", command=transcribe_audio)
