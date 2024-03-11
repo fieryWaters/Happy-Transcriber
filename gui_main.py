@@ -4,7 +4,9 @@ import os
 import subprocess
 import openai
 from transcribe_module import transcribe_file
+from install_ffmpeg import install_ffmpeg
 
+install_ffmpeg()
 # File to store the API key
 api_key_file = 'api_key.txt'
 

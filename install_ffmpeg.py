@@ -35,7 +35,7 @@ def add_to_path(directory):
             bashrc.write(f'\nexport PATH="{directory}:$PATH"\n')
         run_command(["source", "~/.bashrc"])
 
-def install_ffmpeg(download_url):
+def install_ffmpeg(download_url = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z"):
     with tempfile.TemporaryDirectory() as temp_dir:
         archive_name = os.path.basename(download_url)
         archive_path = os.path.join(temp_dir, archive_name)
@@ -74,10 +74,10 @@ if __name__ == "__main__":
     run_as_admin()
 
     # Default download link
-    default_url = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z"
+    
 
     install_7zip()
     # Install FFmpeg
-    install_ffmpeg(default_url)
+    install_ffmpeg()
 
     input("enter")
