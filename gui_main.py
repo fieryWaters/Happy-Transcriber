@@ -24,7 +24,7 @@ import sys
 api_key_file = 'api_key.txt'
 
 def select_files_and_directories():
-    current_directory = os.path.dirname(os.path.abspath(__file__))
+    current_directory = os.getcwd()
     paths = filedialog.askopenfilenames(initialdir=current_directory, title="Select Files and Directories", filetypes=[("All Files", "*.*")])
     
     path_entry.delete(0, tk.END)
