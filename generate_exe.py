@@ -20,12 +20,12 @@ def install_pyinstaller():
     else:
         print("Failed to install PyInstaller")
 
-def build_exe(script_name):
+def build_exe(script_name, exe_name):
     python_dir = os.path.dirname(sys.executable)
     pyinstaller_path = os.path.join(python_dir, "pyinstaller.exe")
-    
     if os.path.exists(pyinstaller_path):
-        command = f'"{pyinstaller_path}" --onefile {script_name}'
+        icon_path = "happyKitty.ico"  
+        command = f'"{pyinstaller_path}" --onefile --name "{exe_name}" --icon "{icon_path}" {script_name}'
         output = run_command(command)
         if output is not None:
             print("EXE built successfully")
@@ -34,51 +34,47 @@ def build_exe(script_name):
     else:
         print("PyInstaller not found in the virtual environment Scripts directory")
 
-def move_exe(script_name):
+def move_exe(exe_name):
     dist_dir = "./dist"
-    exe_name = f"{os.path.splitext(script_name)[0]}.exe"
-    exe_path = os.path.join(dist_dir, exe_name)
-    
+    exe_path = os.path.join(dist_dir, f"{exe_name}.exe")
     if os.path.exists(exe_path):
         destination = "./"
-        destination_path = os.path.join(destination, exe_name)
-        
+        destination_path = os.path.join(destination, f"{exe_name}.exe")
         if os.path.exists(destination_path):
             os.remove(destination_path)
-        
         shutil.move(exe_path, destination)
-        print(f"Moved {exe_name} to the current directory")
+        print(f"Moved {exe_name}.exe to the current directory")
     else:
-        print(f"Could not find {exe_name} in the dist directory")
+        print(f"Could not find {exe_name}.exe in the dist directory")
 
 def clean_up():
     build_dir = "./build"
     dist_dir = "./dist"
     spec_file = "gui_main.spec"
-    
     if os.path.exists(build_dir):
         shutil.rmtree(build_dir)
         print("Removed build directory")
-    
     if os.path.exists(dist_dir):
         shutil.rmtree(dist_dir)
         print("Removed dist directory")
-    
     if os.path.exists(spec_file):
         os.remove(spec_file)
         print("Removed spec file")
 
-def generate_exe(script_name):
+def generate_exe(script_name, exe_name=None):
+    if exe_name is None:
+        exe_name = os.path.splitext(script_name)[0]
     install_pyinstaller()
-    build_exe(script_name)
-    move_exe(script_name)
+    build_exe(script_name, exe_name)
+    move_exe(exe_name)
     clean_up()
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Please provide the script name as a command-line argument.")
         sys.exit(1)
-    
     script_name = sys.argv[1]
-    generate_exe(script_name)
-
+    exe_name = None
+    if len(sys.argv) > 2:
+        exe_name = sys.argv[2]
+    generate_exe(script_name, exe_name)

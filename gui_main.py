@@ -132,7 +132,8 @@ def transcribe_audio():
             open_file_location(transcriptions_directory)
 # Create the main window
 window = tk.Tk()
-window.title("Audio Transcription")
+window.title("Happy Transcriber")
+window.iconbitmap("happyKitty.ico")  # Set the window icon
 
 # File and directory selection
 path_label = tk.Label(window, text="Select Files and Directories:")
