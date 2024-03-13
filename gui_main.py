@@ -31,7 +31,11 @@ def select_files_and_directories():
     path_entry.insert(tk.END, ', '.join(paths))
 
 def open_file_location(file_path):
-    directory = os.path.dirname(file_path)
+    if os.path.isdir(file_path):
+        directory = file_path
+    else:
+        directory = os.path.dirname(file_path)
+    
     if os.path.exists(directory):
         if os.name == 'nt':  # For Windows
             os.startfile(directory)
@@ -124,7 +128,8 @@ def transcribe_audio():
     if current_file == total_files:
         response = messagebox.askyesno("Transcription Complete", "Transcription completed. Do you want to open the file location?")
         if response:
-            open_file_location(paths[0])
+            transcriptions_directory = os.path.join(os.path.dirname(paths[0]), "Transcriptions")
+            open_file_location(transcriptions_directory)
 # Create the main window
 window = tk.Tk()
 window.title("Audio Transcription")
