@@ -1,4 +1,4 @@
-# gui_main.py
+#gui_main.py
 import utils
 utils.install_requirements()
 
@@ -10,12 +10,15 @@ import subprocess
 import openai
 from transcribe_module import transcribe_file
 from install_ffmpeg import install_ffmpeg, is_ffmpeg_installed
+import pyuac
+import sys
 
-# Check if FFmpeg is installed
-if not is_ffmpeg_installed():
-    install_ffmpeg()
-    messagebox.showinfo("FFmpeg Installation", "FFmpeg has been installed. Please rerun the application.")
-    exit()
+# # Check if FFmpeg is installed
+# if not is_ffmpeg_installed():
+#     install_ffmpeg()
+#     messagebox.showinfo("FFmpeg Installation", "FFmpeg has been installed. Please rerun the application.")
+#     sys.exit()
+#     print("HERE")
 
 # File to store the API key
 api_key_file = 'api_key.txt'
@@ -149,5 +152,19 @@ status_text = tk.StringVar()
 status_label = tk.Label(window, textvariable=status_text)
 status_label.pack()
 
-# Run the GUI
-window.mainloop()
+def main():
+    # Check if FFmpeg is installed
+    if not is_ffmpeg_installed():
+        if not pyuac.isUserAdmin():
+            print("Requesting administrator privileges for FFmpeg installation...")
+            pyuac.runAsAdmin()
+        else:
+            install_ffmpeg()
+            messagebox.showinfo("FFmpeg Installation", "FFmpeg has been installed. Please rerun the application.")
+        # sys.exit()
+    else:
+        # Run the GUI
+        window.mainloop()
+
+if __name__ == "__main__":
+    main()

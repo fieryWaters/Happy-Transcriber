@@ -27,10 +27,7 @@ def is_admin():
     except:
         return False
 
-def run_as_admin():
-    if not is_admin():
-        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
-        sys.exit(0)
+
 
 def save_requirements():
     command = "pip freeze > requirements.txt"
@@ -38,6 +35,11 @@ def save_requirements():
     print("Requirements saved to requirements.txt")
 
 def install_requirements():
+    if getattr(sys, 'frozen', False):
+        # The script is running as an executable (EXE)
+        print("Running as an executable. Skipping requirements installation.")
+        return
+
     python_exe = sys.executable
     command = f'"{python_exe}" -m pip install -r requirements.txt'
     output = run_command(command)

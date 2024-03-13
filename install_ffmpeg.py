@@ -6,9 +6,9 @@ import zipfile
 import tarfile
 import tempfile
 import subprocess
-from utils import run_command, download_file, run_as_admin, subprocess
+from utils import run_command, download_file
 from install_7z import install_7zip
-
+import pyuac
 def extract_archive(filename, destination):
     install_7zip()
     if filename.endswith(".zip"):
@@ -32,6 +32,7 @@ def extract_archive(filename, destination):
 
 def add_to_path(directory):
     if platform.system() == "Windows":
+        print(f"adding {directory} to path")
         run_command(f'setx /m PATH "{directory};%PATH%"')
     else:
         with open(os.path.expanduser("~/.bashrc"), "a") as bashrc:
@@ -49,7 +50,9 @@ def install_ffmpeg(download_url="https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-f
     if is_ffmpeg_installed():
         print("FFmpeg is already installed.")
         return
-    run_as_admin()
+    if not pyuac.isUserAdmin():
+        print("Requesting administrator privileges for FFmpeg installation...")
+        pyuac.runAsAdmin()
 
     with tempfile.TemporaryDirectory() as temp_dir:
         archive_name = os.path.basename(download_url)
@@ -84,7 +87,4 @@ def install_ffmpeg(download_url="https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-f
         print("FFmpeg installation completed.")
 
 if __name__ == "__main__":
-    run_as_admin()
-    # Default download link
-    # Install FFmpeg
     install_ffmpeg()

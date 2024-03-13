@@ -1,8 +1,9 @@
 # install_7z.py
 import os
 import tempfile
-from utils import download_file, run_as_admin, subprocess
-
+import subprocess
+from utils import download_file
+import pyuac
 def is_7zip_installed():
     seven_zip_path = r"C:\Program Files\7-Zip\7z.exe"
     return os.path.exists(seven_zip_path)
@@ -13,7 +14,9 @@ def install_7zip():
         print("7-Zip is already installed.")
         return True
     
-    run_as_admin()
+    if not pyuac.isUserAdmin():
+        print("Requesting administrator privileges for 7-Zip installation...")
+        pyuac.runAsAdmin()
 
     # Download 7-Zip installer
     print("Downloading 7-Zip installer...")
@@ -32,6 +35,8 @@ def install_7zip():
     print("Adding 7-Zip to PATH...")
     seven_zip_dir = r"C:\Program Files\7-Zip"
     try:
+        print(f"adding {seven_zip_dir} to path")
+
         # This will add the directory to the PATH, which is the usual approach
         subprocess.run(f'setx PATH "%PATH%;{seven_zip_dir}"', shell=True)
     except Exception as e:
@@ -42,4 +47,5 @@ def install_7zip():
     return True
 
 if __name__ == "__main__":
+
     install_7zip()
