@@ -24,8 +24,8 @@ def build_exe(script_name, exe_name):
     python_dir = os.path.dirname(sys.executable)
     pyinstaller_path = os.path.join(python_dir, "pyinstaller.exe")
     if os.path.exists(pyinstaller_path):
-        icon_path = "happyKitty.ico"  
-        command = f'"{pyinstaller_path}" --onefile --name "{exe_name}" --icon "{icon_path}" {script_name}'
+        icon_path = "happyKitty.ico"
+        command = f'"{pyinstaller_path}" --onefile --name "{exe_name}" --icon "{icon_path}" --add-data "{icon_path}:." {script_name}'
         output = run_command(command)
         if output is not None:
             print("EXE built successfully")

@@ -130,10 +130,19 @@ def transcribe_audio():
         if response:
             transcriptions_directory = os.path.join(os.path.dirname(paths[0]), "Transcriptions")
             open_file_location(transcriptions_directory)
+
+# Get the directory of the executable
+if getattr(sys, 'frozen', False):
+    # If running as a bundled executable
+    exe_dir = sys._MEIPASS
+else:
+    # If running as a script
+    exe_dir = os.path.dirname(os.path.abspath(__file__))
+
 # Create the main window
 window = tk.Tk()
 window.title("Happy Transcriber")
-window.iconbitmap("happyKitty.ico")  # Set the window icon
+# window.iconbitmap(os.path.join(exe_dir, "happyKitty.ico"))  # Set the window icon using the bundled file
 
 # File and directory selection
 path_label = tk.Label(window, text="Select Files and Directories:")
