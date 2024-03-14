@@ -1,3 +1,7 @@
+#add exe to gitignore because they are too big
+Happy*
+ff*
+
 .DS_Store
 __pycache__/
 api_key.txt

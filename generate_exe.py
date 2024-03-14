@@ -20,17 +20,28 @@ def install_pyinstaller():
     else:
         print("Failed to install PyInstaller")
 
-def build_exe(script_name, exe_name):
+def build_exe(script_name, exe_name, icon_path=None, additional_files=None):
     python_dir = os.path.dirname(sys.executable)
     pyinstaller_path = os.path.join(python_dir, "pyinstaller.exe")
     if os.path.exists(pyinstaller_path):
-        icon_path = "happyKitty.ico"
-        command = f'"{pyinstaller_path}" --onefile --name "{exe_name}" --icon "{icon_path}" --add-data "{icon_path}:." {script_name}'
-        output = run_command(command)
+        command = [
+            f'"{pyinstaller_path}"',
+            "--onefile",
+            f'--name "{exe_name}"',
+        ]
+        if icon_path:
+            command.append(f'--icon "{icon_path}"')
+            command.append(f'--add-data "{icon_path}:."')
+        if additional_files:
+            for file in additional_files:
+                command.append(f'--add-data "{file}:."')
+        command.append(script_name)
+        command_str = " ".join(command)
+        output = run_command(command_str)
         if output is not None:
-            print("EXE built successfully")
+            print(f"{exe_name}.exe built successfully")
         else:
-            print("Failed to build EXE")
+            print(f"Failed to build {exe_name}.exe")
     else:
         print("PyInstaller not found in the virtual environment Scripts directory")
 
@@ -47,10 +58,9 @@ def move_exe(exe_name):
     else:
         print(f"Could not find {exe_name}.exe in the dist directory")
 
-def clean_up():
+def clean_up(spec_file):
     build_dir = "./build"
     dist_dir = "./dist"
-    spec_file = "gui_main.spec"
     if os.path.exists(build_dir):
         shutil.rmtree(build_dir)
         print("Removed build directory")
@@ -59,22 +69,29 @@ def clean_up():
         print("Removed dist directory")
     if os.path.exists(spec_file):
         os.remove(spec_file)
-        print("Removed spec file")
+        print(f"Removed {spec_file} file")
 
-def generate_exe(script_name, exe_name=None):
-    if exe_name is None:
-        exe_name = os.path.splitext(script_name)[0]
+def generate_core_exe(script_name, exe_name, icon_path):
     install_pyinstaller()
-    build_exe(script_name, exe_name)
+    build_exe(script_name, exe_name, icon_path)
     move_exe(exe_name)
-    clean_up()
+    clean_up(f"{script_name.split('.')[0]}.spec")
+
+def generate_installer_exe(script_name, exe_name, icon_path, additional_files):
+    install_pyinstaller()
+    build_exe(script_name, exe_name, icon_path, additional_files)
+    move_exe(exe_name)
+    clean_up(f"{script_name.split('.')[0]}.spec")
+
+def generate_generic_exe(script_name, exe_name, icon_path=None, additional_files=None):
+    install_pyinstaller()
+    build_exe(script_name, exe_name, icon_path, additional_files)
+    move_exe(exe_name)
+    clean_up(f"{script_name.split('.')[0]}.spec")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Please provide the script name as a command-line argument.")
-        sys.exit(1)
-    script_name = sys.argv[1]
-    exe_name = None
-    if len(sys.argv) > 2:
-        exe_name = sys.argv[2]
-    generate_exe(script_name, exe_name)
+    # Build the core application executable
+    generate_core_exe("gui_main.py", "HappyTranscriber", "happyKitty.ico")
+
+    # Build the installer executable
+    generate_installer_exe("installer.py", "HappyTranscriberInstaller", "happyKitty.ico", ["HappyTranscriber.exe", "ffmpeg.exe", "ffprobe.exe"])

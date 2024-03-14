@@ -11,7 +11,7 @@ def run_command(command):
         result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         return result.stdout
     except subprocess.CalledProcessError as e:
-        print(f"Error executing command: {e}")
+        print(f"Error executing command: {e}\n stderr: {e.stderr}\n stdout: {e.stdout}")
         return None
 
 def download_file(url, filename):
