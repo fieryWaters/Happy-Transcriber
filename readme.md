@@ -1,3 +1,4 @@
+![Logo](happyTranscriber.jpg)
 Hi, welcome to the Happy Transcriber Repo!
 
 This is a simple app that will convert audio files into text transcription. It supports transcribing multiple files at a time, and runs off OpenAI's state-of-the-art transcription AI Whisper.
